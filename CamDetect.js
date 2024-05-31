@@ -157,6 +157,7 @@ function predictWebcam() {
 	
   if (predictionActive)
   {	  
+	  var VideoCanvas = document.getElementById('VideoCanvas')
 	  // Now let's start classifying a frame in the stream.
 	  model.detect(video).then(function (predictions) {
 		// Remove any highlighting we did previous frame.
@@ -190,6 +191,7 @@ function predictWebcam() {
 
 			liveView.appendChild(highlighter);
 			liveView.appendChild(p);
+			VideoCanvas.appendChild(highlighter);  
 			children.push(highlighter);
 			children.push(p);
 		  }
