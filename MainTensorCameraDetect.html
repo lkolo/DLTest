@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LK Tensorflow Camera detection </title>
+    <!-- Inclure jQuery -->
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+	<link  rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+	
+	<h1>Detection multiple d'objets via un modele pré-entrainé</h1>
+    <p>Attendre le chargement du modèle avant d'appuyer sur le bouton qui deviendra actif deviendra actif après chargement. - cliquer sur le bouton ensuite</p>
+    
+    <section id="demos" class="invisible">  <!-- section invisible tant que le modele n'est pas chargé -->
+
+      <p>Une fois la camera activée, placer differents objets devant et le programme devrait pouvoir nommé les objets les plus usuels et définir un cadre autour des objets détéctés</p>
+      
+      <div id="liveView" class="camView">
+        <button id="webcamButton">Enable Webcam</button>
+		<button id="PredictionButton">Enable/Disable IA Prediction Webcam</button>
+        <video id="webcam" autoplay muted width="640" height="480"></video>
+		<canvas id="VideoCanvas"></canvas>
+      </div>
+    </section>
+	<button id="BtTakePicture"> Prendre une Photo</button>
+	<button id="WebcamMoveNet3">estimation de pose- MoveNet </button>
+	<div style="background: #ff0000; border: 2px solid #e66465; color: #ffffff" id="LKMessage2" > Veuillez Attendre que les modèles COCOssd et MOVEnET soit chargé </div>	
+
+	<h1>TensorFlow hub load Raw TFJS MoveNet Model</h1>
+	<p>Détection de pose humaine sur base d'une image</p>
+	<!--<img id="exempleImg" width="640" height="360" crossorigin src="https://storage.googleapis.com/jmstore/TensorFlowJS/Edx/standing.jpg" />-->
+	
+	<!-- Dans cet exemple, le parent de l'image est une div avec position: relative, ce qui signifie que les décalages (offsetTop et offsetLeft) 
+	de l'image seront calculés par rapport à cette div. Par conséquent, en définissant les propriétés top et left du canvas en fonction de ces décalages, 
+	le canvas sera positionné correctement sur l'image.  -->
+	<div style="position: relative;">
+	    exempleImg
+		<img id="exempleImg" src="startimg.jpg" alt="exempleImg">
+		ImgRecadree
+		<img id="ImgRecadree" src="" >
+		<canvas id="canvas"></canvas>
+		<canvas id="canvas2"></canvas>
+		<br>
+		<button id="OCR">DETECTION DE CARACTERES </button>
+		Zoom scale <input type="range" min="1" max="10" step="0.1" value="0" class="slider" id="myZoomSlider"> 
+		<input type="text" id="ZoomScale" placeholder="1" >
+		<button id="ZOOMPlus">ZOOM + </button>
+		<button id="ZOOMPlus">ZOOM - </button>
+		<button id="ImageCrayonFilter"> Creer Image Crayonnee </button>
+		<button id="DetectCaractCrayonFilter"> detection caracteres sur Image Crayonnee </button>
+		<br>
+		<H3>ESTIMATION DE LA POSE SUR IMAGE COMPLETE</H3> 
+		<br>
+		<input type="file" id="loadImageBt" accept="image/*">
+		<button id="WebcamMoveNet">estimation de pose (img 1)- MoveNet </button>	
+		________________________________________________________________________________________________
+		<br>
+		<br>
+		<H3> ESTIMATION DE LA POSE SUR UNE PORTION DE IMAGE COMPLETE </H3>
+		<br>
+		Position Zoom : X:<input type="range" min="0" max="1024" value="0" class="slider" id="myPosXSlider">
+		Y:<input type="range" min="0" max="800" value="0" class="slider" id="myPosYSlider"> 
+		Width:<input type="range" min="0" max="1024" value="0" class="slider" id="mySqWidthSlider">
+		Height:<input type="range" min="0" max="1024" value="0" class="slider" id="mySqHeighhSlider">
+		<br>
+		Position X :<input type="text" id="posX" name="posX" required minlength="4" maxlength="8" size="10" placeholder="Use slider" />
+		Position Y :<input type="text" id="posY" name="posY" required minlength="4" maxlength="8" size="10" placeholder="Use slider"/>
+		Width :<input type="text" id="SqWidth" name="SqWidth" required minlength="4" maxlength="8" size="10" placeholder="Use slider"/>
+		Height :<input type="text" id="SqHeight" name="SqHeight" required minlength="4" maxlength="8" size="10" placeholder="Use slider"/>
+		<br>
+		Attention : les Axes sont inversé dans le tenseur => axe X(en pixels) devient Y (dans le tenseur)et axe Y (en pixels) devient X (dans le tenseur)
+		<br>
+		le cadre ROUGE reprensente les coordonées PIXEL, le cadre vert affichera ce que le TENSEUR prendra en compte (pour rappel, image dans tenseur 192*192) 
+		<br>
+		<button id="BtDelimiteZone"> Delimite la zone de l'image a prendre en compte (de preference un CARRE !) </button>
+		<button id="BtCropImage">Afficher recadrage de l'image dans le TENSEUR (192*192)</button>
+		<button id="BtPartieImage">Afficher une partie de l'image - code JavaScript</button>
+		<br>
+		<button id="BtWebcamMoveNetSquare">estimation de pose (selection carré) - MoveNet (pose probleme) </button>
+		<button id="WebcamMoveNet2">estimation de pose (img 2)- MoveNet </button>
+		<div id="LKMessage" > Estimation de la posture humaine </div>
+	</div>
+	
+	
+	
+    <!-- Import TensorFlow.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js" type="text/javascript"></script>
+    <!-- Load the coco-ssd model to use to recognize things in images -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+	       <!-- Load OCR pour la detection de caracteres -->
+	       <!--<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/ocr"></script>-->
+	 <!-- Actuellement, TensorFlow.js ne propose pas de modèle OCR intégré directement, mais il est possible d'utiliser d'autres bibliothèques OCR comme Tesseract.js avec TensorFlow.js. -->
+	 <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+	 
+	 <!--    bibliothèque cv de OpenCV.js pour le prétraitement  d'images --> 
+	  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+	
+	<!-- LK FILE fOR CAMERA DETECTION OBJECT  -->
+	<script src="LKImage.js"></script>
+	<script src="CamDetect.js"></script> 
+	<script src="LK_Drawing.js"></script> 
+	<script src="LK_utilitaire.js"></script>
+	
+     
+	<script>
+	    // getUserMediaSupported() ;  //cette fonction est lancée automatiquement dans camdetect.js 
+		MainStart() ;  // le bouton "USE MOVENET FOR POSE"  lance ensuite la fonction LoadAndRunqSINGLEPOSEModel 
+		// AddEventOnCanvas("canvas","exempleImg") ;  permet de dessiner des cercles sur le canvas positionné sur l'image
+	</script>
+
+</body>
+</html
