@@ -187,7 +187,7 @@ function predictWebcam() {
 				+ predictions[n].bbox[3] + 'px;';
 				
 			TraiterPredictionEtCapturerPoseHumaine(predictions[n]) ;
-			//drawCircleTest('VideoCanvas', 50, 50, 10) ;
+			drawCircleTest('VideoCanvas', 50, 50, 10) ;
 
 			liveView.appendChild(highlighter);
 			liveView.appendChild(p);
