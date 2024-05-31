@@ -309,13 +309,13 @@ async function ChargerImageFromHD()          // deplace dans LKImage.js
 
 async function TraiterPredictionEtCapturerPoseHumaine(Mypredictions) 
 {
-	
+	/*
 	if( (Mypredictions.class).toUpperCase() === "PERSON" )
 	{
 		await capturePhotoV2('exempleImg', 'canvas') ;	
 		await RunqSINGLEPOSEModel('canvas') ;
 	}
-    	
+    */ 	
 	
 	
 	//if( (Mypredictions.class).toUpperCase() === "CONTAINER" )
